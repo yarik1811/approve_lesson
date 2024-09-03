@@ -102,7 +102,7 @@
         </div>
         <div class="calendar" id="calendar"></div>
         <div class="selected-date" id="selectedDate">Выбранная дата: Нет</div>
-        <button class="confirm-button" id="confirmButton" onclick="confirmDate()">Подтвердить</button>
+        <button class="confirm-button" id="confirmButton">Подтвердить</button>
     </div>
 
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -116,6 +116,7 @@
         const selectedDateElement = document.getElementById('selectedDate');
         const prevMonthBtn = document.getElementById('prevMonth');
         const nextMonthBtn = document.getElementById('nextMonth');
+        let confirmBut = document.getElementById('confirmButton')
         let selectedDay = null;
         let currentDate = new Date();
 
@@ -167,7 +168,7 @@
         }
 
         // Функция подтверждения даты
-        window.confirmDate = function () {
+        confirmBut.addEventListener("click", () => {
             if (selectedDay) {
                 const selectedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), selectedDay.textContent);
                 const data = {
