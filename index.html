@@ -92,8 +92,9 @@
     </style>
 </head>
 <body>
-    <h1>Выбери дату проведения занятия</h1>
+
     <div class="calendar-container">
+        <h3>Укажи дату проведения занятия</h3>
         <div class="calendar-header">
             <div class="arrow" id="prevMonth">&lt;</div>
             <div class="month" id="monthDisplay">Месяц ГГГГ</div>
@@ -108,6 +109,7 @@
 
     <script>
         let tg = window.Telegram.WebApp;
+        tg.expand() // метод позволяет растянуть окно на всю высоту.
 
         const calendar = document.getElementById('calendar');
         const monthDisplay = document.getElementById('monthDisplay');
@@ -172,7 +174,8 @@
                     date: selectedDate.toISOString().split('T')[0]
                 };
                 tg.sendData(JSON.stringify(data));
-                alert(`Вы выбрали дату: ${selectedDate.toLocaleDateString('ru-RU')}`);
+                tg.close() // метод закрывает приложение.
+
             } else {
                 alert('Пожалуйста, выберите дату.');
             }
