@@ -1,114 +1,212 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-   <meta charset="UTF-8">
-   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <title>Test Telegram WebApps API</title>
-   <script src="https://telegram.org/js/telegram-web-app.js"></script> <!--Подключаем скрипт от телеграм-->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Выбор даты</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-   <style>
-      body{
-         color: var(--tg-theme-text-color);
-         background: var(--tg-theme-bg-color);
-         display: flex;
-         flex-direction: column;
-         align-items: center;
-         font-size: 18px;
-      }
+        body {
+            color: var(--tg-theme-text-color);
+            background: var(--tg-theme-bg-color);
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
 
-      .hint{
-         color: var(--tg-theme-hint-color);
-      }
+        .calendar-container {
+            width: 100%;
+            max-width: 400px;
+            background-color: var(--tg-theme-secondary-bg-color);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
 
-      .link{
-         color: var(--tg-theme-link-color);
-      }
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            color: var(--tg-theme-hint-color);
+        }
 
-      .button{
-         background: var(--tg-theme-button-color);
-         color: var(--tg-theme-button-text-color);
-         border: none;
-         font-size: 18px;
-      }
+        .calendar-header .month {
+            font-weight: bold;
+            font-size: 1.2em;
+        }
 
-      .button:not(:last-child){
-         margin-bottom: 20px
-      }
+        .hint{
+            color: var(--tg-theme-hint-color);
+        }
 
-      #usercard{
-         text-align: center;
-      }
-   </style>
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 40px);
+            gap: 5px;
+            margin-bottom: 20px;
+        }
+
+        .day {
+            padding: 10px;
+            background-color: var(--tg-theme-button-color);
+            border-radius: 5px;
+            cursor: pointer;
+            color: var(--tg-theme-button-text-color);
+        }
+
+        .day.selected {
+            background-color: var(--tg-theme-button-color);
+            color: white;
+        }
+
+        .confirm-button {
+            padding: 10px 20px;
+            border: none;
+            background-color: var(--tg-theme-button-color);
+            color: var(--tg-theme-button-text-color);
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .confirm-button:hover {
+            background-color: var(--tg-theme-button-color);
+            opacity: 0.8;
+        }
+
+        .selected-date {
+            margin-bottom: 10px;
+            color: var(--tg-theme-hint-color);
+        }
+
+        .arrow {
+            cursor: pointer;
+            font-size: 1.5em;
+            color: var(--tg-theme-hint-color);
+        }
+
+        .button{
+            background: var(--tg-theme-button-color);
+            color: var(--tg-theme-button-text-color);
+            border: none;
+            font-size: 18px;
+        }
+
+        .button:not(:last-child){
+            margin-bottom: 20px
+        }
+
+    </style>
 </head>
-
 <body>
-   <div id="usercard"> <!--Карта профиля, человека, который к нам обратился-->
-   </div>
-   <p>Just text</p> <!--Просто текст для проверки-->
-   <a class="link" href="https://mihailgok.ru">Link</a> <!--Просто ссылка для проверки-->
-   <p class="hint">Some little hint</p> <!--Просто текст-подсказка для проверки-->
-   <button id="btn" class="button">Show/Hide Main Button</button> <!--Кнопка, чтобы скрыть / показать основную кнопку-->
-   <button id="btnED" class="button">Enable/Disable Main Button</button> <!--Кнопка, чтобы сделать кнопку активной/неактивной-->
+
+    <div class="calendar-container">
+        <p class="hint">Some little hint</p> <!--Просто текст-подсказка для проверки-->
+        <div class="calendar-header">
+            <div class="arrow" id="prevMonth">&lt;</div>
+            <div class="month" id="monthDisplay">Месяц ГГГГ</div>
+            <div class="arrow" id="nextMonth">&gt;</div>
+        </div>
+        <div class="calendar" id="calendar"></div>
+        <div class="selected-date" id="selectedDate">Выбранная дата: Нет</div>
+    </div>
+
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    <script>
+        let tg = window.Telegram.WebApp;
+        tg.expand() // метод позволяет растянуть окно на всю высоту.
+
+        tg.MainButton.text = "Подтвердить";
+
+        tg.MainButton.color = "#ababab"; //изменяем цвет бэкграунда кнопки
+        tg.MainButton.textColor = "#ffffff"; //изменяем цвет текста кнопки
+        tg.MainButton.disable(); //выключаем кнопку
+        tg.MainButton.show();
+
+
+
+        const calendar = document.getElementById('calendar');
+        const monthDisplay = document.getElementById('monthDisplay');
+        const selectedDateElement = document.getElementById('selectedDate');
+        const prevMonthBtn = document.getElementById('prevMonth');
+        const nextMonthBtn = document.getElementById('nextMonth');
+        
+        let selectedDay = null;
+        let currentDate = new Date();
+
+        // Функция для создания календаря
+        function createCalendar(date) {
+            calendar.innerHTML = ''; // Очистка предыдущих дней
+            const year = date.getFullYear();
+            const month = date.getMonth();
+
+            // Устанавливаем название месяца и год
+            monthDisplay.textContent = date.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' });
+
+            const firstDayOfMonth = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            // Заполнение пустых дней в начале месяца
+            for (let i = 0; i < firstDayOfMonth; i++) {
+                const emptyDay = document.createElement('div');
+                calendar.appendChild(emptyDay);
+            }
+
+            // Заполнение дней месяца
+            for (let i = 1; i <= daysInMonth; i++) {
+                const dayElement = document.createElement('div');
+                dayElement.classList.add('day');
+                dayElement.textContent = i;
+                dayElement.addEventListener('click', function () {
+                    selectDay(i, dayElement);
+                });
+                calendar.appendChild(dayElement);
+            }
+        }
+
+        // Функция для выбора дня
+        function selectDay(day, dayElement) {
+            if (selectedDay) {
+                selectedDay.classList.remove('selected');
+            }
+            selectedDay = dayElement;
+            selectedDay.classList.add('selected');
+            const selectedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+            selectedDateElement.textContent = `Выбранная дата: ${selectedDate.toLocaleDateString('ru-RU')}`;
+            
+            tg.MainButton.setParams({"color": "#60ff26"}); //меняем цвет
+            tg.MainButton.enable(); //показываем
+        }
+
+        // Функция переключения месяцев
+        function changeMonth(offset) {
+            currentDate.setMonth(currentDate.getMonth() + offset);
+            createCalendar(currentDate);
+        }
+
+        Telegram.WebApp.onEvent('mainButtonClicked', function(){
+           const selectedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), selectedDay.textContent);
+                const data = {
+                    date: selectedDate.toISOString().split('T')[0]
+                };
+                tg.sendData(JSON.stringify(data));
+                tg.close(); // метод закрывает приложение.
+        });
+
+        prevMonthBtn.addEventListener('click', () => changeMonth(-1));
+        nextMonthBtn.addEventListener('click', () => changeMonth(1));
+
+        // Инициализация календаря на текущий месяц
+        createCalendar(currentDate);
+    </script>
 </body>
-
-<script>
-   let tg = window.Telegram.WebApp; //получаем объект webapp телеграма 
-
-   tg.expand(); //расширяем на все окно  
-
-   tg.MainButton.text = "Changed Text"; //изменяем текст кнопки 
-   tg.MainButton.setText("Changed Text1"); //изменяем текст кнопки иначе
-   tg.MainButton.textColor = "#F55353"; //изменяем цвет текста кнопки
-   tg.MainButton.color = "#143F6B"; //изменяем цвет бэкграунда кнопки
-   tg.MainButton.setParams({"color": "#143F6B"}); //так изменяются все параметры
-
-   let btn = document.getElementById("btn"); //получаем кнопку скрыть/показать 
-
-   btn.addEventListener('click', function(){ //вешаем событие на нажатие html-кнопки
-      if (tg.MainButton.isVisible){ //если кнопка показана 
-         tg.MainButton.hide() //скрываем кнопку 
-      }
-      else{ //иначе
-         tg.MainButton.show() //показываем 
-      }
-   });
-
-   let btnED = document.getElementById("btnED"); //получаем кнопку активировать/деактивировать
-   btnED.addEventListener('click', function(){ //вешаем событие на нажатие html-кнопки
-      if (tg.MainButton.isActive){ //если кнопка показана 
-         tg.MainButton.setParams({"color": "#E0FFFF"}); //меняем цвет
-         tg.MainButton.disable() //скрываем кнопку 
-      }
-      else{ //иначе
-         tg.MainButton.setParams({"color": "#143F6B"}); //меняем цвет
-         tg.MainButton.enable() //показываем 
-      }
-   });
-
-   Telegram.WebApp.onEvent('mainButtonClicked', function(){
-      tg.sendData("some string that we need to send"); 
-      //при клике на основную кнопку отправляем данные в строковом виде
-   });
-
-
-   let usercard = document.getElementById("usercard"); //получаем блок usercard 
-
-   let profName = document.createElement('p'); //создаем параграф
-   profName.innerText = `${tg.initDataUnsafe.user.first_name}
-   ${tg.initDataUnsafe.user.last_name}
-   ${tg.initDataUnsafe.user.username} (${tg.initDataUnsafe.user.language_code})`;
-   //выдем имя, "фамилию", через тире username и код языка
-   usercard.appendChild(profName); //добавляем 
-
-   let userid = document.createElement('p'); //создаем еще параграф 
-   userid.innerText = `${tg.initDataUnsafe.user.id}`; //показываем user_id
-   usercard.appendChild(userid); //добавляем
-
-
-   //работает только в attachment menu
-   // let pic = document.createElement('img'); //создаем img
-   // pic.src = tg.initDataUnsafe.user.photo_url; //задаём src 
-   // usercard.appendChild(pic); //добавляем элемент в карточку 
-</script>
 </html>
