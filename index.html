@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Выбор даты</title>
+    <title>Проведение занятия</title>
     <style>
         * {
             margin: 0;
@@ -66,8 +66,8 @@
         .day.selected {
             background-color: var(--tg-theme-button-color);
             color: white;
-            border: 2px solid white; /* Добавляет белую обводку */
-            box-sizing: border-box;  /* Учитывает ширину границы в общей ширине элемента */
+            outline: 2px white;
+            outline-offset:-4px;
         }
 
         .confirm-button {
