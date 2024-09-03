@@ -66,6 +66,8 @@
         .day.selected {
             background-color: var(--tg-theme-button-color);
             color: white;
+            border: 2px solid white; /* Добавляет белую обводку */
+            box-sizing: border-box;  /* Учитывает ширину границы в общей ширине элемента */
         }
 
         .confirm-button {
@@ -129,8 +131,8 @@
 
         tg.MainButton.color = "#ababab"; //изменяем цвет бэкграунда кнопки
         tg.MainButton.textColor = "#ffffff"; //изменяем цвет текста кнопки
-        tg.MainButton.disable(); //выключаем кнопку
-        tg.MainButton.show();
+        tg.MainButton.disable() //выключаем кнопку
+        tg.MainButton.show()
 
 
 
@@ -139,7 +141,7 @@
         const selectedDateElement = document.getElementById('selectedDate');
         const prevMonthBtn = document.getElementById('prevMonth');
         const nextMonthBtn = document.getElementById('nextMonth');
-        
+
         let selectedDay = null;
         let currentDate = new Date();
 
@@ -182,9 +184,9 @@
             selectedDay.classList.add('selected');
             const selectedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
             selectedDateElement.textContent = `Выбранная дата: ${selectedDate.toLocaleDateString('ru-RU')}`;
-            
+
             tg.MainButton.setParams({"color": "#60ff26"}); //меняем цвет
-            tg.MainButton.enable(); //показываем
+            tg.MainButton.enable() //показываем
         }
 
         // Функция переключения месяцев
@@ -199,7 +201,8 @@
                     date: selectedDate.toISOString().split('T')[0]
                 };
                 tg.sendData(JSON.stringify(data));
-                tg.close(); // метод закрывает приложение.
+                console.log(data)
+                tg.close() // метод закрывает приложение.
         });
 
         prevMonthBtn.addEventListener('click', () => changeMonth(-1));
