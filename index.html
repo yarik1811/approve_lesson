@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Выбор даты</title>
+    <title>Document</title>
     <style>
         * {
             margin: 0;
@@ -14,179 +14,101 @@
         body {
             color: var(--tg-theme-text-color);
             background: var(--tg-theme-bg-color);
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
         }
 
-        .calendar-container {
+        .Main {
             width: 100%;
-            max-width: 400px;
-            background-color: var(--tg-theme-secondary-bg-color);
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            text-align: center;
+
+        }
+
+        h1 {
+            margin-top: 40px;
+            margin-bottom: 10px;
+        }
+
+        img {
+            width: 70px;
+            margin: 30px auto;
+        }
+
+        .btn {
+            border: 0;
+            border-radius: 5px;
+            margin-top: 50px;
+            height: 60px;
+            width: 200px;
+            font-style: 20px;
+            font-weight: 500;
+            cursor: pointer;
+            color: var(--tg-theme-button-text-color);
+            background: var(--tg-theme-button-color);
+        }
+
+        form {
+            display: none;
             text-align: center;
         }
-
-        .calendar-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            color: var(--tg-theme-hint-color);
-        }
-
-        .calendar-header .month {
-            font-weight: bold;
-            font-size: 1.2em;
-        }
-
-        .calendar {
-            display: grid;
-            grid-template-columns: repeat(7, 40px);
-            gap: 5px;
-            margin-bottom: 20px;
-        }
-
-        .day {
-            padding: 10px;
-            background-color: var(--tg-theme-button-color);
+        
+        input {
+            outline: none;
             border-radius: 5px;
-            cursor: pointer;
-            color: var(--tg-theme-button-text-color);
+            border: 2px solid #535353;
+            padding: 15px 10px;
+            margin: 10px 0 0;
+            background: var(--tg-theme-section-separator-color);
+            color: var(--tg-theme-text-color);
+            transition: all .2s;
         }
-
-        .day.selected {
-            background-color: var(--tg-theme-button-color);
-            color: white;
+        
+        input:focus {
+            border-color: var(--tg-theme-secondary-bg-color)
         }
-
-        .confirm-button {
-            padding: 10px 20px;
-            border: none;
-            background-color: var(--tg-theme-button-color);
-            color: var(--tg-theme-button-text-color);
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .confirm-button:hover {
-            background-color: var(--tg-theme-button-color);
-            opacity: 0.8;
-        }
-
-        .selected-date {
-            margin-bottom: 10px;
-            color: var(--tg-theme-hint-color);
-        }
-
-        .arrow {
-            cursor: pointer;
-            font-size: 1.5em;
-            color: var(--tg-theme-hint-color);
-        }
-
+        
     </style>
 </head>
 <body>
-
-    <div class="calendar-container">
-        <h3>Укажи дату проведения занятия</h3>
-        <div class="calendar-header">
-            <div class="arrow" id="prevMonth">&lt;</div>
-            <div class="month" id="monthDisplay">Месяц ГГГГ</div>
-            <div class="arrow" id="nextMonth">&gt;</div>
-        </div>
-        <div class="calendar" id="calendar"></div>
-        <div class="selected-date" id="selectedDate">Выбранная дата: Нет</div>
-        <button class="confirm-button" id="confirmButton">Подтвердить</button>
+    <div class="Main">
+        <h1>Тестовое приложение</h1>
+        <img src="{{ url_for('static', filename='bot.png') }}" alt="">
+        <p></p>
+        <button class="btn f-btn">Тест отправки данных</button>
     </div>
+    <form class="test-form">    
+        <input type="text" placeholder="Введите заголовок" class="title-inp">
+        <input type="text" placeholder="Введите описание" class="desc-inp">
+        <input type="text" placeholder="Введите текст" class="text-inp">
+        <button class="btn s-btn">Отправить</button>
+    </form>
 
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
     <script>
         let tg = window.Telegram.WebApp;
-        tg.expand() // метод позволяет растянуть окно на всю высоту.
 
-        const calendar = document.getElementById('calendar');
-        const monthDisplay = document.getElementById('monthDisplay');
-        const selectedDateElement = document.getElementById('selectedDate');
-        const prevMonthBtn = document.getElementById('prevMonth');
-        const nextMonthBtn = document.getElementById('nextMonth');
-        let confirmBut = document.getElementById('confirmButton')
-        let selectedDay = null;
-        let currentDate = new Date();
+        let fBtn = document.getElementsByClassName("f-btn")[0]
+        let sBtn = document.getElementsByClassName("s-btn")[0]
 
-        // Функция для создания календаря
-        function createCalendar(date) {
-            calendar.innerHTML = ''; // Очистка предыдущих дней
-            const year = date.getFullYear();
-            const month = date.getMonth();
-
-            // Устанавливаем название месяца и год
-            monthDisplay.textContent = date.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' });
-
-            const firstDayOfMonth = new Date(year, month, 1).getDay();
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-            // Заполнение пустых дней в начале месяца
-            for (let i = 0; i < firstDayOfMonth; i++) {
-                const emptyDay = document.createElement('div');
-                calendar.appendChild(emptyDay);
-            }
-
-            // Заполнение дней месяца
-            for (let i = 1; i <= daysInMonth; i++) {
-                const dayElement = document.createElement('div');
-                dayElement.classList.add('day');
-                dayElement.textContent = i;
-                dayElement.addEventListener('click', function () {
-                    selectDay(i, dayElement);
-                });
-                calendar.appendChild(dayElement);
-            }
-        }
-
-        // Функция для выбора дня
-        function selectDay(day, dayElement) {
-            if (selectedDay) {
-                selectedDay.classList.remove('selected');
-            }
-            selectedDay = dayElement;
-            selectedDay.classList.add('selected');
-            const selectedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-            selectedDateElement.textContent = `Выбранная дата: ${selectedDate.toLocaleDateString('ru-RU')}`;
-        }
-
-        // Функция переключения месяцев
-        function changeMonth(offset) {
-            currentDate.setMonth(currentDate.getMonth() + offset);
-            createCalendar(currentDate);
-        }
-
-        // Функция подтверждения даты
-        confirmBut.addEventListener("click", () => {
-            if (selectedDay) {
-                const selectedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), selectedDay.textContent);
-                const data = {
-                    date: selectedDate.toISOString().split('T')[0]
-                };
-                tg.sendData(JSON.stringify(data));
-                tg.close() // метод закрывает приложение.
-
-            } else {
-                alert('Пожалуйста, выберите дату.');
-            }
+        fBtn.addEventListener("click", () => {
+            document.getElementsByClassName("Main")[0].style.display = "none";
+            document.getElementsByClassName("test-form")[0].style.display = "block";
         });
 
-        prevMonthBtn.addEventListener('click', () => changeMonth(-1));
-        nextMonthBtn.addEventListener('click', () => changeMonth(1));
+        sBtn.addEventListener("click", () => {
+            let title = document.getElementsByClassName("title-inp")[0];
+            let description = document.getElementsByClassName("desc-inp")[0];
+            let text = document.getElementsByClassName("text-inp")[0];
 
-        // Инициализация календаря на текущий месяц
-        createCalendar(currentDate);
+            
+            let data = {
+                title: title.value,
+                desc: description.value,    
+                text: text.value
+            }
+
+            tg.sendData(JSON.stringify(data));
+        });
     </script>
 </body>
 </html>
